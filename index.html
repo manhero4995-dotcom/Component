@@ -31,7 +31,7 @@ input[type=number]{width:100%;padding:4px;border:1px solid var(--bd);border-radi
 .total{display:flex;justify-content:space-between;align-items:center;padding:12px;font-weight:700;font-size:16px;background:var(--sel)}
 .total em{font-style:normal;color:var(--ac);font-size:19px}
 .note{font-size:12px;color:var(--mu);margin:10px 2px;line-height:1.6}
-</style>
+.qt{display:inline-flex;align-items:center;gap:4px;margin-top:5px;font-size:12px;color:var(--mu)}.qt button{width:26px;height:26px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);border-radius:7px;font-size:16px;line-height:1;cursor:pointer;padding:0}.qt input{width:50px!important}</style>
 </head>
 <body>
 <h1>🤖 Robot Parts – Prices + 3D Models</h1>
@@ -113,7 +113,7 @@ var fmt=function(n){return n.toLocaleString("en-US")+" EGP"};
 function render(){
   var h="";
   items.forEach(function(it,i){
-    h+='<div class="row'+(i==sel?' sel':'')+'" data-i="'+i+'"><input type="checkbox" '+(it.on?'checked':'')+' data-c="'+i+'"><div class="nm">'+it.n+'<small class="'+(it.opt?'opt':'')+'">'+AR[i]+' • Qty: '+it.q+(it.opt?' • Optional':'')+'</small></div><input type="number" min="0" value="'+it.p+'" data-p="'+i+'"><div class="sub-t">'+fmt(it.p*it.q)+'</div></div>';
+    h+='<div class="row'+(i==sel?' sel':'')+'" data-i="'+i+'"><input type="checkbox" '+(it.on?'checked':'')+' data-c="'+i+'"><div class="nm">'+it.n+'<small class="'+(it.opt?'opt':'')+'">'+AR[i]+(it.opt?' • Optional':'')+'</small><span class="qt">Qty <button data-m="'+i+'">−</button><input type="number" min="0" step="1" data-q="'+i+'" value="'+it.q+'"><button data-a="'+i+'">+</button></span></div><input type="number" min="0" value="'+it.p+'" data-p="'+i+'"><div class="sub-t">'+fmt(it.p*it.q)+'</div></div>';
   });
   document.getElementById("list").innerHTML=h;
   tot();info();
@@ -123,11 +123,11 @@ function info(){var it=items[sel];document.getElementById("tn").textContent=it.n
 document.getElementById("list").addEventListener("click",function(e){
   var t=e.target;
   if(t.dataset.c!==undefined){items[t.dataset.c].on=t.checked;tot();return}
-  if(t.dataset.p!==undefined)return;
+  if(t.dataset.p!==undefined||t.dataset.q!==undefined)return;if(t.dataset.m!==undefined||t.dataset.a!==undefined){var qi=+(t.dataset.m!==undefined?t.dataset.m:t.dataset.a);items[qi].q=Math.max(0,items[qi].q+(t.dataset.m!==undefined?-1:1));qtyUpd(qi);return}
   var r=t.closest(".row");if(r){sel=+r.dataset.i;render();show(items[sel].m)}
 });
 document.getElementById("list").addEventListener("input",function(e){
-  var t=e.target;if(t.dataset.p!==undefined){var i=+t.dataset.p;items[i].p=+t.value||0;t.parentNode.querySelector(".sub-t").textContent=fmt(items[i].p*items[i].q);tot();if(i==sel)info()}
+  var t=e.target;if(t.dataset.q!==undefined){var j=+t.dataset.q;items[j].q=Math.max(0,Math.floor(+t.value)||0);t.closest(".row").querySelector(".sub-t").textContent=fmt(items[j].p*items[j].q);tot();if(j==sel)info();return}if(t.dataset.p!==undefined){var i=+t.dataset.p;items[i].p=+t.value||0;t.parentNode.querySelector(".sub-t").textContent=fmt(items[i].p*items[i].q);tot();if(i==sel)info()}
 });
 
 /* ---- 3D ---- */
@@ -259,6 +259,9 @@ var rows=[['CPU & performance','Pi 5: quad-core ARM Cortex-A76 (2.4GHz). Enough 
 ['Size & weight','Very small and light. The screen is the largest part.','Larger and heavier (tablet + keyboard); needs suitable space on the robot.'],
 ['Best for','Low-cost projects, direct hardware control and saving budget.','Your project with camera, voice and vision, and interacting with people through a ready screen.']];
 document.getElementById('tb').innerHTML='<tr><th>Comparison</th><th>Screen + Raspberry Pi 5</th><th>HP Elite x2 Laptop</th></tr>'+rows.map(function(r){return'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>'}).join('');
+
+function qtyUpd(i){var r=document.querySelector('.row[data-i="'+i+'"]');r.querySelector('[data-q]').value=items[i].q;r.querySelector('.sub-t').textContent=fmt(items[i].p*items[i].q);tot();if(i==sel)info()}
+(function(){var v=document.querySelector('.viewer'),f=document.createElement('input');f.type='file';f.accept='image/*';f.style.display='none';var b=document.createElement('button');b.textContent='📤 Upload real photo';b.style.cssText='position:absolute;bottom:30px;right:12px;padding:7px 12px;border:0;border-radius:9px;background:#334155;color:#fff;font:600 13px inherit;cursor:pointer';b.onclick=function(){f.click()};f.onchange=function(){var file=f.files[0];if(!file)return;var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var k=items[sel].m;PH[k]=r.result;PHA[k]=im.width/im.height;seen[k]=1;photoMode=true;show(k)};im.src=r.result};r.readAsDataURL(file);f.value=''};v.appendChild(f);v.appendChild(b)})();
 </script>
 </body>
 </html>
